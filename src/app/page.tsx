@@ -1,69 +1,123 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
 
 export default function Home() {
+  const grid = [
+    ['NN', 'NN', 'NN', 'SBR', 'CR', 'SB', 'SG', 'CGR', 'RC'],
+    ['NN', 'NN', 'SPI', 'CY', 'CG', 'SY', 'SG', 'CGR', 'RC'],
+    ['SGR', 'CG', 'SG', 'SB', 'CG', 'SY', 'SG', 'CGR', 'RC'],
+    ['NN', 'SPI', 'SPU', 'CY', 'SR', 'SY', 'SG', 'CGR', 'RC'],
+    ['NN', 'NN', 'NN', 'SBK', 'SR', 'CO', 'SG', 'CGR', 'RC'],
+    ['NN', 'SY', 'CB', 'SPI', 'CY', 'SR', 'SG', 'CGR', 'RC'],
+    ['NN', 'NN', 'NN', 'SY', 'CY', 'SB', 'SG', 'CGR', 'RC'],
+  ];
+
+  const [overrides, setOverrides] = useState<Record<string, string>>({});
+
+  const handleOverride = (code: string, value: string) => {
+    const letter = value.replace(/[^a-zA-Z]/g, '').slice(0, 1).toUpperCase();
+    setOverrides((prev) => {
+      const next = { ...prev };
+      if (letter) {
+        next[code] = letter;
+      } else {
+        delete next[code];
+      }
+      return next;
+    });
+  };
+
+  const unique = [...new Set(grid.flat().filter(item => item !== 'NN'))];
+
+  const colors: Record<string, string> = {
+    R: '#da0d0d',
+    G: '#22c55e',
+    B: '#174fa8',
+    Y: '#eab308',
+    W: '#ffffff',
+    O: '#f97316',
+    PU: '#a855f7',
+    PI: '#ec4899',
+    BK: '#000000',
+    BR: '#92400e',
+    GR: '#6b7280',
+    C: '#06b6d4',
+  };
+
+  const shapes: Record<string, string> = {
+    S: 'rounded-none',
+    C: 'rounded-full',
+    R: 'rounded-xl',
+  };
+
+  function getShape(code: string) {
+    if (code === 'NN') return null;
+
+    const shape = code[0];
+    const color = code.slice(1);
+
+    return {
+      shape: shapes[shape],
+      color: colors[color],
+    };
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
+    <main className="h-screen bg-[#0c0c0c] flex p-6 gap-6 overflow-hidden">
+      {/* Left side: unique legend with its own scrollbar */}
+      <div className="h-full w-64 flex flex-col flex-shrink-0 bg-[#141414] rounded-lg p-4 border border-gray-800">
+        <h2 className="text-white font-bold text-sm mb-3 flex-shrink-0">Mapping</h2>
+        <div className="flex-1 overflow-y-auto flex flex-col gap-3 pr-2 custom-scrollbar">
+          {unique.map((code) => {
+            const cell = getShape(code);
+            if (!cell) return null;
+            return (
+              <div key={code} className="flex items-center gap-3 flex-shrink-0">
+                <div
+                  className={`w-8 h-8 flex-shrink-0 ${cell.shape}`}
+                  style={{ backgroundColor: cell.color }}
+                />
+                <input
+                  type="text"
+                  maxLength={1}
+                  value={overrides[code] || ''}
+                  onChange={(e) => handleOverride(code, e.target.value)}
+                  className="w-10 h-8 text-center bg-white text-black rounded border border-gray-600 focus:outline-none focus:border-blue-500 text-sm font-bold"
+                />
+                <span className="text-gray-400 text-xs font-mono">{code}</span>
+              </div>
+            );
+          })}
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+      </div>
+
+      {/* Right side: grid preview centered */}
+      <div className="flex-1 h-full flex items-center justify-center overflow-hidden">
+        <div className="grid grid-cols-9 gap-3">
+          {grid.flatMap((row, rowIndex) =>
+            row.map((code, colIndex) => {
+              const cell = getShape(code);
+
+              return (
+                <div
+                  key={`${rowIndex}-${colIndex}`}
+                  className="w-10 h-10 flex items-center justify-center"
+                >
+                  {cell && (
+                    <div
+                      className={`w-full h-full ${cell.shape} flex items-center justify-center text-black text-sm font-bold`}
+                      style={{ backgroundColor: cell.color }}
+                    >
+                      {overrides[code] || ''}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
